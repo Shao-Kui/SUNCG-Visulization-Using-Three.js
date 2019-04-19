@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SUNCG with Three.JS</title>
+    <style>
+        body{margin: 0}
+        canvas{width:100%; height:100%}
+    </style>
+</head>
+<body>
+<script src="js/three.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/OBJLoader.js"></script>
+<script src="js/MTLLoader.js"></script>
+<script src="js/GLTFLoader.js"></script>
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="js/TGALoader.js"></script>
+<script src="js/FirstPersonControls.js"></script>
+<script src="js/PointerLockControls.js"></script>
+<script>
+    /**
+     * @return {boolean}
+     */
+    function CheckUrl(url)
+    {
+        var http=new XMLHttpRequest();
+        http.open('HEAD', url, false);
+        http.send();
+        return http.status!==404;
+    }
+    var load_gltf_transform = function(path, scene, m_json=undefined){
+        path = path + '.gltf';
+        if(!CheckUrl(path)){
+            console.log("file not exists");
+            return
+        }
+        var loader = new THREE.GLTFLoader();
+        loader.load(path, function ( gltf ) {
+            var matrix = new THREE.Matrix4();
+            if (m_json === undefined){
+                matrix.set(
+                    1,0,0,0,
+                    0,1,0,0,
+                    0,0,1,0,
+                    0,0,0,1
+                )
+            }else{
+                matrix.fromArray(m_json);
+            }
+            let object = gltf.scene;
+            object.applyMatrix(matrix);
+            scene.add(object);
+        }, undefined, function ( error ) {
+            console.error( error );
+        } );
+    };
+    var scene = new THREE.Scene();
+    const house_id = 'b6ef8e1b68ff811454eda42d81ce2c62';
+    var house_config = '';
+    $.ajaxSetup({
+        async: false
+    });
+    $.get('./scenes/' + house_id +'/house.json', function(data) {
+        house_config = data;
+    });
+    const prefix = './scenes/' + house_id + '/';
+    house_config.levels.forEach(function(level){
+        let nodes = level.nodes;
+        nodes.forEach(function(node){
+            if(node.type === 'Room'){
+                let fname = node.modelId + 'c';
+                load_gltf_transform(prefix + fname, scene);
+                fname = node.modelId + 'f';
+                load_gltf_transform(prefix + fname, scene);
+                fname = node.modelId + 'w';
+                load_gltf_transform(prefix + fname, scene);
+            }else if(node.type === 'Object'){
+                let fname = node.modelId;
+                load_gltf_transform(prefix + fname, scene, node.transform);
+            }else if(node.type === 'Ground'){
+                let fname = node.modelId + 'f';
+                load_gltf_transform(prefix + fname, scene);
+            }
+        })
+    });
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    console.log(house_config.bbox.max[0]);
+
+    window.addEventListener('resize', function () {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+    });
+
+    var axis = new THREE.AxesHelper(1000);
+    scene.add(axis);
+
+    //sky box
+    var tgaLoader = new THREE.TGALoader();
+    var skyGeo = new THREE.CubeGeometry(1000, 1000, 1000);
+    var skyMaterials = [
+        new THREE.MeshBasicMaterial({map: tgaLoader.load("img/mp_impaler/impaler-point_ft.tga"), side: THREE.DoubleSide}),
+        new THREE.MeshBasicMaterial({map: tgaLoader.load("img/mp_impaler/impaler-point_bk.tga"), side: THREE.DoubleSide}),
+        new THREE.MeshBasicMaterial({map: tgaLoader.load("img/mp_impaler/impaler-point_up.tga"), side: THREE.DoubleSide}),
+        new THREE.MeshBasicMaterial({map: tgaLoader.load("img/mp_impaler/impaler-point_dn.tga"), side: THREE.DoubleSide}),
+        new THREE.MeshBasicMaterial({map: tgaLoader.load("img/mp_impaler/impaler-point_rt.tga"), side: THREE.DoubleSide}),
+        new THREE.MeshBasicMaterial({map: tgaLoader.load("img/mp_impaler/impaler-point_lf.tga"), side: THREE.DoubleSide})
+    ];
+    var sky = new THREE.Mesh(skyGeo, skyMaterials);
+    scene.add(sky);
+
+    var moveForward = false;
+    var moveBackward = false;
+    var moveLeft = false;
+    var moveRight = false;
+    var moveUp = false;
+    var moveDown = false;
+    var prevTime = performance.now();
+    var direction = new THREE.Vector3();
+    controls = new THREE.PointerLockControls( camera );
+    document.addEventListener('click', function(){
+        controls.lock();
+    });
+    scene.add(controls.getObject());
+    var onKeyDown = function (event) {
+        switch ( event.keyCode ) {
+            case 38: // up
+            case 87: // w
+                moveForward = true;
+                break;
+            case 37: // left
+            case 65: // a
+                moveLeft = true;
+                break;
+            case 40: // down
+            case 83: // s
+                moveBackward = true;
+                break;
+            case 39: // right
+            case 68: // d
+                moveRight = true;
+                break;
+            case 32: // space
+                moveUp = true;
+                break;
+            case 67: // C
+                moveDown = true;
+                break;
+        }
+    };
+    var onKeyUp = function (event) {
+        switch ( event.keyCode ) {
+            case 38: // forward
+            case 87: // w
+                moveForward = false;
+                break;
+            case 37: // left
+            case 65: // a
+                moveLeft = false;
+                break;
+            case 40: // backward
+            case 83: // s
+                moveBackward = false;
+                break;
+            case 39: // right
+            case 68: // d
+                moveRight = false;
+                break;
+            case 32: // space
+                moveUp = false;
+                break;
+            case 67: // C
+                moveDown = false;
+                break;
+        }
+    };
+    document.addEventListener('keydown', onKeyDown, false);
+    document.addEventListener('keyup', onKeyUp, false);
+    controls.getObject().translateZ(house_config.bbox.min[2]);
+    controls.getObject().translateX(house_config.bbox.min[0]);
+    var update_controls = function(){
+        if ( controls.isLocked === true ) {
+            var time = performance.now();
+            var delta = ( time - prevTime ) / 200;
+            let c_direct = new THREE.Vector3();
+            c_direct.z = Number( moveForward ) - Number( moveBackward );
+            c_direct.x = Number( moveLeft ) - Number( moveRight );
+            c_direct.y = Number(moveUp) - Number(moveDown);
+            console.log(controls.getObject().position);
+            direction.normalize(); // this ensures consistent movements in all directions
+            let camera_direction = controls.getDirection(new THREE.Vector3());
+            let y = camera_direction.y;
+            camera_direction.y = 0;
+            let xz_length = camera_direction.length();
+            if ( moveForward || moveBackward ){
+                controls.getObject().translateZ(-c_direct.z * delta * xz_length);
+                controls.getObject().translateY(c_direct.z * delta * y);
+            }
+            if ( moveLeft || moveRight ){
+                controls.getObject().translateX(-c_direct.x * delta);
+            }
+            if (moveUp || moveDown){
+                controls.getObject().translateY( (Number(moveUp) - Number(moveDown)) * delta );
+            }
+            prevTime = time;
+        }
+    };
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
+    scene.add(ambientLight);
+
+    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.7);
+    directionalLight.castShadow = true;
+    directionalLight.position.y = 0.5;
+    scene.add(directionalLight);
+
+    var update = function(){
+        update_controls();
+        var time= Date.now() * 0.001;
+        directionalLight.position.x = Math.sin(time);
+        directionalLight.position.z = Math.cos(time);
+    };
+
+    var gameLoop = function(){
+        requestAnimationFrame(gameLoop);
+        update();
+        renderer.render(scene, camera);
+    };
+    console.log("start game loop");
+    gameLoop();
+</script>
+</body>
+</html>
