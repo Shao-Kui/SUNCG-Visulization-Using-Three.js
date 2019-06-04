@@ -29,7 +29,29 @@
         http.send();
         return http.status!==404;
     }
-    var load_gltf_transform = function(path, scene, m_json=undefined){
+    
+    var traverseObjSetting = function (object) {
+        if(object instanceof  THREE.Mesh){
+            object.castShadow = true;
+            object.receiveShadow = true;
+            //object.material.alphaTest = 0.9;
+            let texture = object.material.map;
+            object.customDepthMaterial = new THREE.MeshDepthMaterial({
+                depthPacking: THREE.RGBADepthPacking,
+                alphaTest: 0.5
+            });
+            object.customDepthMaterial.alphaMap = texture;
+            return;
+        }
+        if(object.children.length === 0){
+            return;
+        }
+        object.children.forEach(function(child){
+            traverseObjSetting(child);
+        })
+    };
+    
+    var load_gltf_transform = function(path, scene, m_json=undefined, receive_shadow=false){
         path = path + '.gltf';
         if(!CheckUrl(path)){
             console.log("file not exists");
@@ -50,6 +72,9 @@
             }
             let object = gltf.scene;
             object.applyMatrix(matrix);
+            object.castShadow = true;
+            object.receiveShadow = true;
+            traverseObjSetting(object);
             scene.add(object);
         }, undefined, function ( error ) {
             console.error( error );
@@ -88,7 +113,6 @@
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-    console.log(house_config.bbox.max[0]);
 
     window.addEventListener('resize', function () {
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -190,7 +214,6 @@
             c_direct.z = Number( moveForward ) - Number( moveBackward );
             c_direct.x = Number( moveLeft ) - Number( moveRight );
             c_direct.y = Number(moveUp) - Number(moveDown);
-            console.log(controls.getObject().position);
             direction.normalize(); // this ensures consistent movements in all directions
             let camera_direction = controls.getDirection(new THREE.Vector3());
             let y = camera_direction.y;
@@ -210,21 +233,59 @@
         }
     };
 
+    //renderer.shadowMap.enabled = true;
+    //renderer.shadowMapEnabled = true;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
+    var ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.2);
     scene.add(ambientLight);
 
-    var directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.7);
+    lx = (house_config.bbox.max[0]+house_config.bbox.min[0])/2;
+    lz = (house_config.bbox.max[2]+house_config.bbox.min[2])/2;
+
+    var directionalLight = new THREE.DirectionalLight(0xffffff, 2);
     directionalLight.castShadow = true;
-    directionalLight.position.y = 0.5;
-    scene.add(directionalLight);
+    directionalLight.shadow.mapSize.width = 4096 * 8;
+    directionalLight.shadow.mapSize.height = 4096 * 8;
+    directionalLight.shadow.camera.near = 0.01;
+    directionalLight.shadow.camera.far = 1000;
+    directionalLight.position.set(lx, 12, lz);
+    directionalLight.target.position.set(lx, 0, lz);
+    directionalLight.shadow.camera.left = -1000;
+    directionalLight.shadow.camera.right = 1000;
+    directionalLight.shadow.camera.top = 1000;
+    directionalLight.shadow.camera.bottom = -1000;
+    //directionalLight.shadowDarkness = 0.5;
+    //directionalLight.shadowCameraVisible = true;
+    //scene.add(directionalLight);
+    scene.add(directionalLight.target);
+
+    //Create a PointLight and turn on shadows for the light
+    spotLight = new THREE.SpotLight( 0xffffff, 2 );
+    spotLight.position.set( lx, 12, lz);
+    spotLight.target.position.set(lx, 0, lz);
+    spotLight.angle = Math.PI / 4;
+    spotLight.penumbra = 0;
+    spotLight.decay = 0;
+    spotLight.distance = 0;
+    spotLight.castShadow = true;
+    spotLight.shadow.mapSize.width = 4096;
+    spotLight.shadow.mapSize.height = 4096;
+    spotLight.shadow.camera.near = 0.01;
+    spotLight.shadow.camera.far = 1000;
+    scene.add( spotLight );
+    scene.add( spotLight.target );
+
+    //shadowCameraHelper = new THREE.CameraHelper( directionalLight.shadow.camera );
+    //scene.add( shadowCameraHelper );
 
     var update = function(){
         update_controls();
         var time= Date.now() * 0.001;
-        directionalLight.position.x = Math.sin(time);
-        directionalLight.position.z = Math.cos(time);
+        spotLight.position.x = lx +  Math.sin(time) * 12;
+        spotLight.position.z = lz + Math.cos(time) * 12;
+        directionalLight.position.x = lx +  Math.sin(time) * 12;
+        directionalLight.position.z = lz + Math.cos(time) * 12;
     };
 
     var gameLoop = function(){
