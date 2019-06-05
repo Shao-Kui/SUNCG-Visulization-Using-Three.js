@@ -90,6 +90,9 @@
         house_config = data;
     });
     const prefix = './scenes/' + house_id + '/';
+    if(typeof house_config === "string"){
+    	house_config = JSON.parse(house_config);
+    }
     house_config.levels.forEach(function(level){
         let nodes = level.nodes;
         nodes.forEach(function(node){
