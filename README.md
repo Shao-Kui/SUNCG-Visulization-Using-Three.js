@@ -3,8 +3,6 @@ This is a light-weight tool of visualizing [SUNCG][SUNCGGITHUB] dataset, based o
 
 ![FirstGlance](./scenes/example.png)
 
-# Dependencies
-
 # To Use
 This tool can be used as easy as a single click! Just be careful of the following. 
 ## First-Person Navigation
