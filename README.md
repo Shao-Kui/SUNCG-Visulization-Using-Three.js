@@ -8,7 +8,7 @@ This is a light-weight tool of visualizing [SUNCG][SUNCGGITHUB] dataset, based o
 # To Use
 This tool can be used as easy as a single click! Just be careful of the following: 
 ## Preparing GLTF Models
-SUNCG is originally based on .ojb/.mtl format. However, there are some problems of using the OBJLoader of three.js, so currently we should use a script to transform models into gltf-based ones. I would be really grateful if anyone figures out how to correctly use OBJLoader, and the details of the problem is specified [here][objloader]. 
+SUNCG is originally based on .ojb/.mtl format. However, there are some problems of using the OBJLoader of three.js, so currently we should use a script to transform models into gltf-based ones. **I would be really grateful if anyone figures out how to correctly use OBJLoader, and the details of the problem is specified [here][objloader]**. 
 
 To use [OBJ2GLTF][objgltf], node.js is required to install firstly. Then install the package: 
 ```
