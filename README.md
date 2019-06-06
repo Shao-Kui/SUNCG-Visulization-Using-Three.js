@@ -7,16 +7,17 @@ This is a light-weight tool of visualizing [SUNCG][SUNCGGITHUB] dataset, based o
 
 # To Use
 This tool can be used as easy as a single click! Just be careful of the following. 
-## First-Person View Navigation
-The following keys are available for you to control: 
-**W**: Move forward with respect to camera. 
-**S**: Move backward with respect to camera. 
-**A**: Move left with respect to camera. 
-**D**: Move right with respect to camera. 
-**C**: Go down with respect to the world coordinate (specifically, the y-axis). 
-**Space**: Go up with respect to the world coordinate. 
-**Mouse**: Navigate the view. 
-**ESC**: Exit the first-person mode and get back the control of mouse cursor. 
+## First-Person Navigation
+The following keys are available for you to control:  
+  
+**W**: Move forward with respect to camera.  
+**S**: Move backward with respect to camera.  
+**A**: Move left with respect to camera.  
+**D**: Move right with respect to camera.  
+**C**: Go down with respect to the world coordinate (specifically, the y-axis).  
+**Space**: Go up with respect to the world coordinate.  
+**Mouse**: Navigate the view.  
+**ESC**: Exit the first-person mode and get back the control of mouse cursor.  
 ## Preparing GLTF Models
 SUNCG is originally based on .ojb/.mtl format. However, there are some problems of using the OBJLoader of three.js, so currently we should use a script to transform models into gltf-based ones. **I would be really grateful if anyone figures out how to correctly use OBJLoader, and the details of the problem is specified [here][objloader]**. 
 
