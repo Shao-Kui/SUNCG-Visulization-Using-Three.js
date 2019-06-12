@@ -48,6 +48,25 @@ A demo is uploaded, a first glance of this tool is available.
 # Copyright
 This tool is for research ONLY, which is NOT for any commercial usage! The skybox is from [http://www.custommapmakers.org][skybox]. 
 
+***
+If you find this tool useful, please cite our work with the following bibtex:
+```
+@article{asurveyof3didss,
+author = {Song-Hai Zhang, Shao-Kui Zhang, Yuan Liang, Peter Hall},
+title = {A Survey of 3D Indoor Scene Synthesis},
+publisher = {Journal of Computer Science and Technology},
+year = {2019},
+journal = {Journal of Computer Science and Technology},
+volume = {34},
+number = {3},
+eid = {594},
+numpages = {14},
+pages = {594},
+url = {http://jcst.ict.ac.cn/EN/abstract/article_2532.shtml},
+doi = {10.1007/s11390-019-1929-5}
+}    
+```
+
 [threejs]:https://threejs.org
 [skybox]:http://www.custommapmakers.org/skyboxes.php
 [SUNCGGITHUB]:https://github.com/shurans/SUNCGtoolbox
